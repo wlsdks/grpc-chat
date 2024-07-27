@@ -23,6 +23,11 @@ public class MemberServiceGrpcImpl extends MemberServiceGrpc.MemberServiceImplBa
             MemberProto.MemberRequest request,
             StreamObserver<MemberProto.MemberCreateResponse> responseObserver
     ) {
+        // 아래 코드의 주석을 해제하면 예외처리 인터셉터 테스트 가능
+//        if (request.getEmail().contains("test")) {
+//            throw new IllegalArgumentException("Test exception: Invalid email");
+//        }
+
         // 1. 클라이언트로부터 전달받은 request 데이터를 DTO로 변환한다.
         MemberSignUpRequestDTO memberDTO = memberMapper.requestProtoToDto(request);
 
