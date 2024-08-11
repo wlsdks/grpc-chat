@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option java_package = "com.example.chat";
+option java_multiple_files = true;
+
+message ChatMessage {
+  string user = 1;
+  string message = 2;
+}
+
+service ChatService {
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+}
