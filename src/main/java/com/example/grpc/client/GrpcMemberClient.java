@@ -2,8 +2,7 @@ package com.example.grpc.client;
 
 import com.test.member.grpc.MemberProto;
 import com.test.member.grpc.MemberServiceGrpc;
-import io.grpc.ManagedChannel;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,22 +13,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class GrpcMemberClient {
 
-    private final MemberServiceGrpc.MemberServiceBlockingStub blockingStub;
+    @GrpcClient("chat-server")
+    private MemberServiceGrpc.MemberServiceBlockingStub blockingStub;
 
-    // gRPC 서버에 연결 (생성자)
-    public GrpcMemberClient() {
-        ManagedChannel channel = NettyChannelBuilder.forAddress("localhost", 50051)
-                .usePlaintext()
-                .build();
-        blockingStub = MemberServiceGrpc.newBlockingStub(channel);
-    }
-    
 
     /**
-     * 회원 생성
-     *
      * @param request 회원 생성 요청
-     * @return
+     * @return 회원 생성 응답
+     * @apiNote 회원 생성
      */
     public MemberProto.MemberCreateResponse createMember(MemberProto.MemberRequest request) {
         return blockingStub.createMember(request);
