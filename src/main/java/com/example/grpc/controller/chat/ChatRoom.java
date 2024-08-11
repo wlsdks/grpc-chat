@@ -60,6 +60,7 @@ public class ChatRoom {
             } catch (Exception e) {
                 // 만약 participant가 종료되었거나 에러 상태이면 리스트에서 제거합니다.
                 toRemove.add(participant);
+                System.out.println("Error sending message to participant: " + e.getMessage());
             }
         }
         // 삭제 대상 참가자를 제거합니다.
