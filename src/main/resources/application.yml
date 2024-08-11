@@ -25,6 +25,6 @@ grpc:
   server:
     port: 50051
   client:
-    chatService:  # 클라이언트가 참조할 서비스 이름
+    chat-server:  # 클라이언트가 참조할 서비스 이름
       address: "static://localhost:50051"  # gRPC 서버 주소
       negotiationType: plaintext  # TLS를 사용하지 않으므로 평문 통신 설정

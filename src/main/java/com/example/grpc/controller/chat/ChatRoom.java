@@ -49,9 +49,21 @@ public class ChatRoom {
      * @apiNote 채팅 메시지를 모든 참가자에게 전송하는 메서드
      */
     public void broadcast(ChatMessage message) {
+        // 삭제 대상 참가자 리스트 선언
+        List<StreamObserver<ChatMessage>> toRemove = new ArrayList<>();
+
+        // 모든 참가자에게 메시지를 전송합니다.
         for (StreamObserver<ChatMessage> participant : participants) {
-            participant.onNext(message);
+            try {
+                // onNext 메서드를 호출하여 메시지를 전송합니다.
+                participant.onNext(message);
+            } catch (Exception e) {
+                // 만약 participant가 종료되었거나 에러 상태이면 리스트에서 제거합니다.
+                toRemove.add(participant);
+            }
         }
+        // 삭제 대상 참가자를 제거합니다.
+        participants.removeAll(toRemove);
     }
 
 }
