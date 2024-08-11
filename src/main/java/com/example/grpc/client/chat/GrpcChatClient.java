@@ -16,11 +16,11 @@ public class GrpcChatClient {
     private ChatServiceGrpc.ChatServiceStub chatServiceStub;
 
     /**
-     * @apiNote 채팅을 시작하는 메서드
-     * @param user user
+     * @param user    user
      * @param message message
+     * @apiNote 채팅을 시작하는 메서드
      */
-    public void startChat(String user, String message) {
+    public void startChat(String roomId, String user, String message) {
         StreamObserver<ChatMessage> requestObserver = chatServiceStub.chat(new StreamObserver<ChatMessage>() {
             // 서버로부터 메시지를 전달받으면 콘솔에 출력한다.
             @Override
@@ -41,7 +41,9 @@ public class GrpcChatClient {
             }
         });
 
-        // 클라이언트로부터 전달받은 메시지를 서버로 전송한다.
+        // 첫 메시지로 채팅방 ID를 전송
+        requestObserver.onNext(ChatMessage.newBuilder().setMessage(roomId).build());
+        // 사용자 메시지 전송
         requestObserver.onNext(ChatMessage.newBuilder().setUser(user).setMessage(message).build());
     }
 
