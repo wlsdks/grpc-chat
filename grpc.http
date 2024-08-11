@@ -1,2 +1,2 @@
 ### 멤버 조회
-POST http://localhost:8090/member/create
+POST http://localhost:8090/memberEntity/create

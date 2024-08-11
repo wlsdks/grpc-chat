@@ -1,6 +1,8 @@
 package com.example.grpc.controller.chat;
 
 import com.example.grpc.client.chat.GrpcChatClient;
+import com.example.grpc.entity.MemberEntity;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -23,11 +25,20 @@ public class ChatController {
     @GetMapping("/{roomId}")
     public String chatRoom(
             @PathVariable String roomId,
-            @RequestParam String user,
+            HttpSession session,
             Model model
     ) {
+        // 세션에 user가 없으면 로그인 페이지로 리다이렉트합니다.
+        MemberEntity member = (MemberEntity) session.getAttribute("user");
+        if (member == null) {
+            return "redirect:/login";
+        }
+
+        // roomId와 user를 모델에 추가하여 chat.mustache 템플릿에 전달합니다.
         model.addAttribute("roomId", roomId);
-        model.addAttribute("user", user);
+        model.addAttribute("user", member.getName());
+
+        // chat.mustache 템플릿을 렌더링합니다.
         return "chat";
     }
 
