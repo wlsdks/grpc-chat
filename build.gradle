@@ -62,6 +62,9 @@ dependencies {
 	implementation "io.grpc:grpc-stub:${grpcVersion}"         // gRPC 클라이언트 스텁을 생성
 	compileOnly 'org.apache.tomcat:annotations-api:6.0.53'    // 이걸 추가해야 gRPC 컴파일시 javax 어노테이션 오류가 발생하지 않는다.
 
+	// mustache
+	implementation 'org.springframework.boot:spring-boot-starter-mustache'
+
 	// test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
