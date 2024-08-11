@@ -2,11 +2,17 @@ package com.example.grpc.client.chat;
 
 import com.example.chat.ChatMessage;
 import com.example.chat.ChatServiceGrpc;
+import com.example.grpc.entity.ChatMessageEntity;
+import com.example.grpc.entity.MemberEntity;
+import com.example.grpc.repository.ChatMessageRepository;
+import com.example.grpc.repository.MemberRepository;
 import io.grpc.stub.StreamObserver;
+import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,11 +21,15 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Grpc 채팅 클라이언트
  */
+@RequiredArgsConstructor
 @Service
 public class GrpcChatClient {
 
     @GrpcClient("chat-server")
     private ChatServiceGrpc.ChatServiceStub chatServiceStub;
+
+    private final ChatMessageRepository chatMessageRepository;
+    private final MemberRepository memberRepository;
 
     private final Map<String, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
@@ -65,19 +75,34 @@ public class GrpcChatClient {
 
 
     /**
-     * @param roomId  채팅방 ID
-     * @param user    user
-     * @param message message
-     * @apiNote 메시지를 전송하는 메서드
+     * @param roomId    채팅방 ID
+     * @param userEmail 사용자 이메일
+     * @param message   메시지
+     * @apiNote 채팅 메시지를 전송하는 메서드
      */
-    public void sendMessage(String roomId, String user, String message) {
-        // ChatMessage 객체를 생성한다.
+    public void sendMessage(String roomId, String userEmail, String message) {
+        // 사용자 이메일로 사용자 조회
+        MemberEntity memberEntity = memberRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found with email: " + userEmail));
+
+        // ChatMessage 생성
         ChatMessage chatMessage = ChatMessage.newBuilder()
-                .setUser(user)
+                .setUser(memberEntity.getName())
                 .setMessage(message)
                 .build();
 
-        // chatServiceStub을 사용하여 서버로 메시지를 전송한다.
+        // ChatMessageEntity 생성
+        ChatMessageEntity chatMessageEntity = ChatMessageEntity.builder()
+                .roomId(roomId)
+                .memberEntity(memberEntity)
+                .message(message)
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        // 메시지 저장
+        chatMessageRepository.save(chatMessageEntity);
+
+        // 서버로 메시지를 전송
         broadcastToClients(roomId, chatMessage);
     }
 
