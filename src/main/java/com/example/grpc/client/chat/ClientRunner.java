@@ -21,23 +21,8 @@ public class ClientRunner implements ApplicationRunner {
      */
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        // 첫 번째 클라이언트 실행
-        new Thread(() -> {
-            try {
-                grpcChatClient.startChat("room1", "User1", "Hello from User1");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-        // 두 번째 클라이언트 실행
-        new Thread(() -> {
-            try {
-                grpcChatClient.startChat("room1", "User2", "Hello from User2");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
+        new Thread(() -> grpcChatClient.startChat("room1", "User1")).start();
+        new Thread(() -> grpcChatClient.startChat("room1", "User2")).start();
     }
 
 }

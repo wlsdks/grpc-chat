@@ -14,18 +14,16 @@ public class ChatController {
 
 
     /**
-     * @param user    user
-     * @param message message
+     * @param user user
      * @return ResponseEntity
      * @apiNote 채팅 메시지를 전송하는 메서드
      */
     @PostMapping("/send/{roomId}")
     public ResponseEntity<Void> sendMessage(
             @PathVariable String roomId,
-            @RequestParam String user,
-            @RequestParam String message
+            @RequestParam String user
     ) {
-        grpcChatClient.startChat(roomId, user, message);
+        grpcChatClient.startChat(roomId, user);
         return ResponseEntity.ok().build();
     }
 
