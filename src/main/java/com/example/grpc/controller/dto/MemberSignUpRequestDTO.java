@@ -1,4 +1,4 @@
-package com.example.grpc.dto;
+package com.example.grpc.controller.dto;
 
 import lombok.Data;
 

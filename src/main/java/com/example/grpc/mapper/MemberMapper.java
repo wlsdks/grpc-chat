@@ -1,6 +1,6 @@
 package com.example.grpc.mapper;
 
-import com.example.grpc.dto.MemberSignUpRequestDTO;
+import com.example.grpc.controller.dto.MemberSignUpRequestDTO;
 import com.example.grpc.entity.MemberEntity;
 import com.test.member.grpc.MemberProto;
 import org.mapstruct.Mapper;

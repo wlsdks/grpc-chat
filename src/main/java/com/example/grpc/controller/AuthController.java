@@ -1,5 +1,6 @@
 package com.example.grpc.controller;
 
+import com.example.grpc.controller.dto.MemberDTO;
 import com.example.grpc.entity.MemberEntity;
 import com.example.grpc.service.MemberService;
 import jakarta.servlet.http.HttpSession;
@@ -38,8 +39,9 @@ public class AuthController {
     @PostMapping("/login")
     public String loginUser(@RequestParam String email, @RequestParam String password, HttpSession session, Model model) {
         try {
-            MemberEntity member = memberService.loginUser(email, password);
-            session.setAttribute("user", member);
+            // 로그인 성공 시 세션에 user를 저장하고 채팅 페이지로 리다이렉트합니다.
+            MemberDTO memberDTO =memberService.loginUser(email, password);
+            session.setAttribute("user", memberDTO);
             return "redirect:/chat";
         } catch (Exception e) {
             model.addAttribute("error", "Invalid email or password.");

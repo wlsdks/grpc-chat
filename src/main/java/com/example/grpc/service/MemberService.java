@@ -1,6 +1,7 @@
 package com.example.grpc.service;
 
-import com.example.grpc.dto.MemberSignUpRequestDTO;
+import com.example.grpc.controller.dto.MemberDTO;
+import com.example.grpc.controller.dto.MemberSignUpRequestDTO;
 import com.example.grpc.entity.MemberEntity;
 import com.example.grpc.mapper.MemberMapper;
 import com.example.grpc.repository.MemberRepository;
@@ -46,12 +47,13 @@ public class MemberService {
     /**
      * @param email    이메일
      * @param password 비밀번호
-     * @return 회원 엔티티
+     * @return 회원 DTO
      * @apiNote 이메일과 비밀번호로 로그인하는 메서드
      */
-    public MemberEntity loginUser(String email, String password) {
-        return memberRepository.findByEmailAndPassword(email, password)
+    public MemberDTO loginUser(String email, String password) {
+        MemberEntity memberEntity = memberRepository.findByEmailAndPassword(email, password)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+        return MemberEntity.fromEntity(memberEntity);
     }
 
 }

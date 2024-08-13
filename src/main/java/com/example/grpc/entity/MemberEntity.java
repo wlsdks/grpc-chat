@@ -1,5 +1,6 @@
 package com.example.grpc.entity;
 
+import com.example.grpc.controller.dto.MemberDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,5 +27,14 @@ public class MemberEntity {
 
     @Column(name = "name")
     private String name;
+
+    // factory method
+    public static MemberDTO fromEntity(MemberEntity memberEntity) {
+        return MemberDTO.builder()
+                .id(memberEntity.getId())
+                .email(memberEntity.getEmail())
+                .name(memberEntity.getName())
+                .build();
+    }
 
 }
