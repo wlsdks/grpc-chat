@@ -42,7 +42,7 @@ public class AuthController {
             // 로그인 성공 시 세션에 user를 저장하고 채팅 페이지로 리다이렉트합니다.
             MemberDTO memberDTO =memberService.loginUser(email, password);
             session.setAttribute("user", memberDTO);
-            return "redirect:/chat";
+            return "redirect:/chat/rooms";
         } catch (Exception e) {
             model.addAttribute("error", "Invalid email or password.");
             return "login";

@@ -4,20 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Rooms</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .rooms-container {
+            width: 50%;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-<h1>Chat Rooms</h1>
-<form action="/rooms" method="post">
-    <label for="roomName">Create a new room:</label>
-    <input type="text" id="roomName" name="roomName">
-    <button type="submit">Create Room</button>
-</form>
+<div class="rooms-container">
+    <h1>Chat Rooms</h1>
+    <p>Welcome, {{user}}!</p>
+    <form action="/chat/rooms" method="post">
+        <label for="roomName">Create a new room:</label>
+        <input type="text" id="roomName" name="roomName" placeholder="Enter room name">
+        <button type="submit">Create Room</button>
+    </form>
 
-<h2>Available Rooms:</h2>
-<ul>
-    {{#rooms}}
-        <li><a href="/chat/{{id}}?user={{user}}">{{name}}</a></li>
-    {{/rooms}}
-</ul>
+    <h2>Available Rooms:</h2>
+    <ul>
+        {{#rooms}}
+            <li><a href="/chat/{{id}}?user={{user}}">{{name}}</a></li>
+        {{/rooms}}
+    </ul>
+</div>
 </body>
 </html>

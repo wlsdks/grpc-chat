@@ -1,5 +1,6 @@
 package com.example.grpc.controller.chat;
 
+import com.example.grpc.controller.dto.ChatMessageDTO;
 import com.example.grpc.entity.ChatMessageEntity;
 import com.example.grpc.service.chat.ChatMessageService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RestController
@@ -24,8 +26,8 @@ public class ChatHistoryController {
      * @apiNote 채팅방의 채팅 내역을 조회하는 메서드
      */
     @GetMapping("/history/{roomId}")
-    public List<ChatMessageEntity> getChatHistory(@PathVariable String roomId) {
-        return chatMessageService.findByRoomIdOrderByTimestampAsc(roomId);
+    public List<ChatMessageDTO> getChatHistory(@PathVariable String roomId) {
+        return chatMessageService.getChatMessages(roomId);
     }
 
 }

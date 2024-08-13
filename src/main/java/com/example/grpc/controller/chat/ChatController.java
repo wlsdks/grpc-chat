@@ -2,7 +2,6 @@ package com.example.grpc.controller.chat;
 
 import com.example.grpc.client.chat.GrpcChatClient;
 import com.example.grpc.controller.dto.MemberDTO;
-import com.example.grpc.entity.MemberEntity;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
