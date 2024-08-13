@@ -56,9 +56,7 @@ public class ChatController {
      */
     @GetMapping(value = "/stream/{roomId}", produces = "text/event-stream")
     public SseEmitter streamChat(@PathVariable String roomId) {
-        SseEmitter emitter = new SseEmitter();
-        grpcChatClient.addEmitter(roomId, emitter);
-        return emitter;
+        return grpcChatClient.addEmitter(roomId);
     }
 
 

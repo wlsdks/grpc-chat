@@ -6,26 +6,31 @@
     <title>Chat Room</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f7;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            padding: 20px;
         }
 
         .chat-container {
-            width: 60%;
+            width: 40%;
+            max-width: 600px;
+            min-width: 300px;
             background-color: #ffffff;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
             text-align: center;
             color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
         }
 
         #chat {
@@ -34,9 +39,11 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             overflow-y: scroll;
-            padding: 10px;
-            background-color: #f9f9f9;
+            padding: 15px;
+            background-color: #fafafa;
             margin-bottom: 15px;
+            font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         #chat-message {
@@ -45,20 +52,32 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             margin-right: 10px;
+            font-size: 0.9rem;
         }
 
         button {
             padding: 10px 15px;
-            background-color: #28a745;
+            background-color: #007bff;
             color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s ease;
+            font-size: 0.9rem;
         }
 
         button:hover {
-            background-color: #218838;
+            background-color: #0056b3;
+        }
+
+        @media screen and (max-width: 600px) {
+            .chat-container {
+                width: 100%;
+            }
+
+            #chat {
+                height: 200px;
+            }
         }
     </style>
 </head>
@@ -71,35 +90,71 @@
 </div>
 
 <script>
-    // 채팅 메시지 수신
-    const eventSource = new EventSource('/chat/stream/{{roomId}}');
+    // 채팅 메시지 수신을 위한 SSE(EventSource) 연결 생성
+    let eventSource = createEventSource();
     const chatContainer = document.getElementById('chat');
 
-    // 이전 채팅 기록 로드
+    // SSE 연결을 생성하는 함수
+    function createEventSource() {
+        const source = new EventSource('/chat/stream/{{roomId}}');
+
+        // 새로운 메시지를 수신할 때 호출되는 함수
+        source.onmessage = handleNewMessage;
+
+        // SSE 연결에서 오류가 발생할 때 재연결을 시도하는 로직
+        source.onerror = function(event) {
+            console.error("SSE connection lost, attempting to reconnect...", event);
+            source.close();
+
+            // 3초 후에 새로운 연결을 생성
+            setTimeout(function() {
+                eventSource = createEventSource();
+            }, 3000);
+        };
+
+        source.onopen = function() {
+            console.log("SSE connection opened.");
+        };
+
+        return source;
+    }
+
+    // 서버에서 이전 채팅 기록을 가져와 화면에 표시하는 함수
     fetch(`/chat/history/{{roomId}}`)
             .then(response => response.json())
             .then(data => {
                 data.forEach(message => {
                     const newMessage = document.createElement('div');
-                    newMessage.textContent = `${message.memberEntity.name}: ${message.message}`;
+                    newMessage.textContent = `${message.userName}: ${message.message}`;
                     chatContainer.appendChild(newMessage);
                 });
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
 
-    // 서버로부터 메시지 수신
-    eventSource.onmessage = function(event) {
-        console.log("Received event:", event);
+    // 새로운 메시지를 화면에 표시하는 함수
+    function handleNewMessage(event) {
         const newMessage = document.createElement('div');
         newMessage.textContent = event.data;
         chatContainer.appendChild(newMessage);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    };
+        chatContainer.scrollTop = chatContainer.scrollHeight; // 자동으로 스크롤을 아래로 이동
+    }
 
-    // 메시지 전송
+    // 페이지를 떠날 때 SSE 연결을 종료하는 로직
+    window.addEventListener('beforeunload', function() {
+        eventSource.close();
+    });
+
+    // 메시지를 서버로 전송하는 함수
     function sendMessage() {
         const message = document.getElementById('chat-message').value;
         if (message.trim() === "") return;
+
+        // SSE 연결이 정상적으로 수립되었는지 확인
+        if (eventSource.readyState === EventSource.CLOSED) {
+            console.error("SSE connection is closed. Unable to send message.");
+            return;
+        }
+
         fetch('/chat/send/{{roomId}}', {
             method: 'POST',
             headers: {
@@ -107,12 +162,14 @@
             },
             body: `user={{user}}&message=${message}`
         }).then(response => {
-            if (!response.ok) {
+            if (response.ok) {
+                document.getElementById('chat-message').value = ''; // 입력 필드 비우기
+            } else {
                 console.error("Failed to send message:", response.statusText);
             }
         }).catch(error => console.error("Error sending message:", error));
-        document.getElementById('chat-message').value = '';
     }
 </script>
+
 </body>
 </html>

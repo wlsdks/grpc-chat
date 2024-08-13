@@ -9,9 +9,11 @@ import com.example.grpc.repository.MemberRepository;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,42 +37,69 @@ public class GrpcChatClient {
 
 
     /**
-     * @param user user
-     * @apiNote 채팅을 시작하는 메서드
+     * @param roomId  채팅방 ID
+     * @apiNote 클라이언트가 새로고침으로 인해 연결이 끊어질 때, 서버는 해당 클라이언트에 대한 SSE 연결을 정리해야 합니다.
+     * 이를 위해 SseEmitter에 대해 onCompletion 및 onTimeout 콜백을 설정해 연결이 끊어졌을 때 해당 SseEmitter를 제거해야 합니다.
      */
-    public void startChat(String roomId, String user) {
-        StreamObserver<ChatMessage> requestObserver = chatServiceStub.chat(new StreamObserver<ChatMessage>() {
-            // 서버로부터 메시지를 받았을 때 호출되는 메서드
-            @Override
-            public void onNext(ChatMessage value) {
-                broadcastToClients(roomId, value);
-            }
+    public SseEmitter addEmitter(String roomId) {
+        // 새로운 SseEmitter 생성 (30분 타임아웃 설정)
+        SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
 
-            // 서버로부터 에러를 받았을 때 호출되는 메서드
-            @Override
-            public void onError(Throwable t) {
-                System.out.println("Error: " + t.getMessage());
-            }
+        // roomId에 해당하는 채팅방의 emitters 리스트를 가져와서 emitter를 추가한다.
+        emitters.computeIfAbsent(roomId, k -> new ArrayList<>()).add(emitter);
 
-            // 서버로부터 완료 신호를 받았을 때 호출되는 메서드
-            @Override
-            public void onCompleted() {
-                System.out.println("Chat ended.");
-            }
-        });
+        // 타임아웃 및 완료 핸들러 설정
+        emitter.onCompletion(() -> removeEmitter(roomId, emitter));
+        emitter.onTimeout(() -> removeEmitter(roomId, emitter));
 
-        // 초기 메시지로 채팅방 ID를 전송
-        requestObserver.onNext(ChatMessage.newBuilder().setMessage(roomId).build());
+        try {
+            emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
+        } catch (IOException e) {
+            removeEmitter(roomId, emitter);
+            // 추가된 로깅: 문제가 발생한 Emitter를 식별하기 위해 로깅
+            System.out.println("Failed to send initial keep-alive message to emitter for roomId: " + roomId);
+        }
+
+        return emitter;
     }
+
+
+    /**
+     * @apiNote 클라이언트에게 주기적으로 ping 메시지를 전송하는 메서드
+     * 실제로 클라이언트와의 연결을 유지하기 위해서는 주기적으로(예: 30초마다) 이와 같은 "ping" 메시지를 보내야 하며,
+     * 이를 위해서는 서버 측에서 스케줄러를 사용하여 주기적으로 SseEmitter에 메시지를 전송하는 로직이 필요합니다.
+     * @EnableScheduling 어노테이션을 사용하여 스케줄러를 활성화하고, @Scheduled 어노테이션을 사용하여 주기적으로 메서드를 실행할 수 있습니다.
+     *
+     * 주기적으로 "ping" 메시지를 보내는 로직은 접속한 모든 클라이언트에 대해 개별적으로 실행됩니다. 각 클라이언트가 서버에 연결할 때마다 서버는 해당 클라이언트에 대해 별도의 SseEmitter를 생성하며, 이 SseEmitter는 특정 채팅방(roomId)에 속한 모든 클라이언트에게 메시지를 보내는 역할을 합니다.
+     * @Scheduled로 구현된 sendPingMessages 메서드는 모든 클라이언트의 SseEmitter 목록을 순회하며, 각 SseEmitter에 대해 "ping" 메시지를 주기적으로 전송합니다. 따라서 채팅방에 여러 명의 클라이언트가 접속해 있다면, 이 메서드는 그 채팅방에 연결된 모든 클라이언트에게 개별적으로 "ping" 메시지를 보냅니다.
+     */
+    @Scheduled(fixedRate = 30000)  // 30초마다 실행
+    public void sendPingMessages() {
+        emitters.forEach((roomId, emitterList) -> {
+            List<SseEmitter> deadEmitters = new ArrayList<>();
+            for (SseEmitter emitter : emitterList) {
+                try {
+                    emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
+                } catch (IOException e) {
+                    deadEmitters.add(emitter);
+                    System.out.println("Failed to send ping message to emitter for roomId: " + roomId);
+                }
+            }
+            emitterList.removeAll(deadEmitters);
+        });
+    }
+
 
     /**
      * @param roomId  채팅방 ID
      * @param emitter sseEmitter
-     * @apiNote sseEmitter를 추가하는 메서드
+     * @apiNote sseEmitter를 제거하는 메서드
      */
-    public void addEmitter(String roomId, SseEmitter emitter) {
-        // roomId에 해당하는 채팅방의 emitters 리스트를 가져와서 emitter를 추가한다.
-        emitters.computeIfAbsent(roomId, k -> new ArrayList<>()).add(emitter);
+    private void removeEmitter(String roomId, SseEmitter emitter) {
+        List<SseEmitter> roomEmitters = emitters.get(roomId);
+        if (roomEmitters != null) {
+            roomEmitters.remove(emitter);
+        }
     }
 
 
@@ -130,8 +159,10 @@ public class GrpcChatClient {
                 }
             }
 
-            // deadEmitters에 있는 emitter를 roomEmitters에서 제거한다.
-            roomEmitters.removeAll(deadEmitters);
+            // 문제 있는 Emitter들을 roomEmitters에서 제거
+            for (SseEmitter deadEmitter : deadEmitters) {
+                removeEmitter(roomId, deadEmitter);
+            }
         }
 
     }
