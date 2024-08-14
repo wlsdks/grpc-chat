@@ -42,23 +42,26 @@ public class GrpcChatClient {
      * 이를 위해 SseEmitter에 대해 onCompletion 및 onTimeout 콜백을 설정해 연결이 끊어졌을 때 해당 SseEmitter를 제거해야 합니다.
      */
     public SseEmitter addEmitter(String roomId) {
-        // 새로운 SseEmitter 생성 (30분 타임아웃 설정)
-        SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
+        // 새로운 SseEmitter 생성 (5분 타임아웃 설정)
+        SseEmitter emitter = new SseEmitter(5 * 60 * 1000L);
 
         // roomId에 해당하는 채팅방의 emitters 리스트를 가져와서 emitter를 추가한다.
         emitters.computeIfAbsent(roomId, k -> new ArrayList<>()).add(emitter);
 
         // 타임아웃 및 완료 핸들러 설정
         emitter.onCompletion(() -> removeEmitter(roomId, emitter));
-        emitter.onTimeout(() -> removeEmitter(roomId, emitter));
-
-        try {
-            emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
-        } catch (IOException e) {
+        emitter.onTimeout(() -> {
+            System.out.println("Emitter timed out for roomId: " + roomId);
             removeEmitter(roomId, emitter);
-            // 추가된 로깅: 문제가 발생한 Emitter를 식별하기 위해 로깅
-            System.out.println("Failed to send initial keep-alive message to emitter for roomId: " + roomId);
-        }
+        });
+
+//        try {
+//            emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
+//        } catch (IOException e) {
+//            removeEmitter(roomId, emitter);
+//            // 추가된 로깅: 문제가 발생한 Emitter를 식별하기 위해 로깅
+//            System.out.println("Failed to send initial keep-alive message to emitter for roomId: " + roomId);
+//        }
 
         return emitter;
     }
