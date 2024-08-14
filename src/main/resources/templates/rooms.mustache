@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -103,20 +103,46 @@
 </head>
 <body>
 <div class="rooms-container">
-    <h1>Chat Rooms</h1>
-    <p>Welcome, {{user}}!</p>
-    <form action="/chat/rooms" method="post">
-        <label for="roomName" hidden>Create a new room:</label>
+    <h1>모두의 채팅방</h1>
+    <p>{{user}} 님 환영합니다!</p>
+    <form id="createRoomForm" action="/chat/create-room" method="post">
+        <label for="roomName" hidden>방 만들기</label>
         <input type="text" id="roomName" name="roomName" placeholder="Enter room name">
-        <button type="submit">Create</button>
+
+        <br/>
+
+        <label for="isPrivateYN">비공개 여부</label>
+        <input type="checkbox" id="isPrivateYN" name="isPrivateYN">
+
+        <br/>
+
+        <button type="submit">생성하기</button>
     </form>
 
-    <h2>Available Rooms:</h2>
+    <h2>접속 가능한 채팅방 목록:</h2>
     <ul>
         {{#rooms}}
             <li><a class="room-link" href="/chat/{{id}}?user={{user}}">{{name}}</a></li>
         {{/rooms}}
     </ul>
 </div>
+
+<script>
+    document.getElementById('createRoomForm').addEventListener('submit', function(event) {
+        const isPrivateCheckbox = document.getElementById('isPrivateYN');
+
+        if (isPrivateCheckbox.checked) {
+            isPrivateCheckbox.value = "Y"; // 체크된 경우 "Y"로 설정
+        } else {
+            // 체크되지 않은 경우 "N" 값을 전달
+            const hiddenInput = document.createElement("input");
+            hiddenInput.type = "hidden";
+            hiddenInput.name = "isPrivateYN";
+            hiddenInput.value = "N";
+            this.appendChild(hiddenInput);
+        }
+    });
+</script>
+
 </body>
 </html>
