@@ -25,11 +25,6 @@ public class ChatRoomResponseDTO {
                 .id(savedChatRoom.getId())
                 .name(savedChatRoom.getName())
                 .createdAt(savedChatRoom.getCreatedAt())
-                .creator(MemberDTO.builder()
-                        .id(savedChatRoom.getCreator().getId())
-                        .email(savedChatRoom.getCreator().getEmail())
-                        .name(savedChatRoom.getCreator().getName())
-                        .build())
                 .build();
     }
 

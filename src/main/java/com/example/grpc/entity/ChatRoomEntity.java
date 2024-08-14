@@ -4,6 +4,7 @@ import javax.persistence.*;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.checkerframework.checker.units.qual.C;
 
 import java.time.LocalDateTime;
 
@@ -29,10 +30,14 @@ public class ChatRoomEntity {
     @JoinColumn(name = "creator_id")
     private MemberEntity creator;
 
+    @Column(name = "is_private", nullable = false)
+    private String isPrivateYN; // 비공개 여부 Y, N
+
     // factory method
-    public static ChatRoomEntity of(String roomName, MemberEntity creator, LocalDateTime now) {
+    public static ChatRoomEntity of(String roomName, String isPrivate, MemberEntity creator, LocalDateTime now) {
         return ChatRoomEntity.builder()
                 .name(roomName)
+                .isPrivateYN(isPrivate)
                 .creator(creator)
                 .createdAt(now)
                 .build();
