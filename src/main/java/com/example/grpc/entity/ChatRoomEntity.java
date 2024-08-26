@@ -1,10 +1,7 @@
 package com.example.grpc.entity;
 
-import javax.persistence.*;
-
 import jakarta.persistence.*;
 import lombok.*;
-import org.checkerframework.checker.units.qual.C;
 
 import java.time.LocalDateTime;
 

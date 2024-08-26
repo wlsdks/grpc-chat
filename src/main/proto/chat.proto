@@ -4,10 +4,24 @@ option java_package = "com.example.chat";
 option java_multiple_files = true;
 
 message ChatMessage {
-  string user = 1;
-  string message = 2;
+  string roomId = 1;      // 채팅방 ID
+  string user = 2;        // 사용자 이름
+  string message = 3;     // 채팅 메시지 내용
+  int64 timestamp = 4;    // 타임스탬프 (선택 사항, 메시지의 시간 기록)
+}
+
+message JoinRoomRequest {
+  string roomId = 1;      // 채팅방 ID
+  string user = 2;        // 사용자 이름
+}
+
+message Empty {
 }
 
 service ChatService {
+  // 채팅방에 접속하여 메시지를 주고받는 양방향 스트리밍 RPC
   rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+
+  // 채팅방에 사용자 추가
+  rpc JoinRoom(JoinRoomRequest) returns (Empty);
 }

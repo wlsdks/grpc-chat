@@ -123,6 +123,34 @@ public class GrpcChatClient {
                 .setMessage(message)
                 .build();
 
+        // gRPC를 통해 메시지를 서버로 전송 (chatServiceStub.chat 메서드를 사용하여 gRPC 스트리밍을 시작합니다.)
+        // StreamObserver<ChatMessage>를 통해 gRPC 서버로 메시지를 전송하고, 서버에서 수신된 메시지를 처리합니다.
+        StreamObserver<ChatMessage> requestObserver = chatServiceStub.chat(new StreamObserver<ChatMessage>() {
+            @Override
+            public void onNext(ChatMessage value) {
+                // gRPC로부터 메시지를 수신했을 때의 로직 (서버에서 메시지를 수신했을 때 호출되며, 이 메시지를 채팅방의 클라이언트에게 브로드캐스트합니다.)
+                broadcastToClients(roomId, value);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                System.err.println("gRPC error: " + t.getMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("gRPC communication completed.");
+            }
+
+
+        });
+
+        // 메시지를 gRPC 서버로 전송
+        requestObserver.onNext(chatMessage);
+
+        // 필요에 따라 스트림을 완료합니다.
+        // requestObserver.onCompleted();
+
         // ChatMessageEntity 생성
         ChatMessageEntity chatMessageEntity = ChatMessageEntity.builder()
                 .roomId(roomId)
@@ -133,9 +161,6 @@ public class GrpcChatClient {
 
         // 메시지 저장
         chatMessageRepository.save(chatMessageEntity);
-
-        // 서버로 메시지를 전송
-        broadcastToClients(roomId, chatMessage);
     }
 
 

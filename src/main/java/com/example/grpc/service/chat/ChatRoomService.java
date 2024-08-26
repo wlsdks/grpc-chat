@@ -25,10 +25,9 @@ public class ChatRoomService {
     /**
      * @param requestDTO   채팅방 생성 요청 정보
      * @param creatorEmail 채팅방 생성자 이메일
-     * @return 생성된 채팅방 정보
      * @apiNote 채팅방 생성
      */
-    public ChatRoomResponseDTO createChatRoom(CreateRoomRequestDTO requestDTO, String creatorEmail) {
+    public void createChatRoom(CreateRoomRequestDTO requestDTO, String creatorEmail) {
         MemberEntity creator = memberRepository.findByEmail(creatorEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -36,7 +35,7 @@ public class ChatRoomService {
 
         ChatRoomEntity savedChatRoom = chatRoomRepository.save(chatRoom);
 
-        return ChatRoomResponseDTO.entityToResponseDto(savedChatRoom);
+        ChatRoomResponseDTO.entityToResponseDto(savedChatRoom);
     }
 
 
